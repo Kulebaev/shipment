@@ -5,7 +5,7 @@ import { Input } from "~/components/ui/input/input";
 import { Textarea } from "~/components/ui/textarea/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select/select";
 import { Button } from "~/components/ui/button/button";
-import { drivers, vehicles } from "~/data/shipments";
+import { drivers, vehicles, addShipment } from "~/data/shipments";
 import { useToast } from "~/hooks/use-toast";
 import styles from "./new-shipment.module.css";
 
@@ -33,8 +33,7 @@ export default function NewShipment() {
       !formData.vehicle ||
       !formData.fromAddress ||
       !formData.toAddress ||
-      !formData.price ||
-      !formData.loaderCount
+      !formData.price
     ) {
       toast({
         title: "Ошибка",
@@ -43,6 +42,25 @@ export default function NewShipment() {
       });
       return;
     }
+
+    // Создаем новую отгрузку
+    const newShipment = {
+      id: Date.now().toString(),
+      driver: formData.driver,
+      vehicle: formData.vehicle,
+      fromAddress: formData.fromAddress,
+      toAddress: formData.toAddress,
+      price: Number(formData.price),
+      loaderCount: formData.loaderCount ? Number(formData.loaderCount) : 0,
+      status: "planned" as const,
+      loadingTime: formData.loadingTime || undefined,
+      unloadingTime: formData.unloadingTime || undefined,
+      notes: formData.notes || undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Добавляем отгрузку в данные
+    addShipment(newShipment);
 
     toast({
       title: "Отгрузка создана!",
@@ -175,10 +193,11 @@ export default function NewShipment() {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Грузчики<span className={styles.required}>*</span>
+                  Грузчики
                 </label>
                 <Input
                   type="number"
+                  min="0"
                   placeholder="0"
                   value={formData.loaderCount}
                   onChange={(e) => setFormData({ ...formData, loaderCount: e.target.value })}
